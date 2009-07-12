@@ -5,7 +5,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "amazonavatar"
-    gem.summary = %Q{TODO}
+    gem.summary = %Q{Upload avatars to amazonS3 on a User (or other) model. Simple and opinionated.}
     gem.email = "scott@scottmotte.com"
     gem.homepage = "http://github.com/scottmotte/amazonavatar"
     gem.authors = ["scottmotte"]
