@@ -10,6 +10,9 @@ begin
     gem.homepage = "http://github.com/scottmotte/amazonavatar"
     gem.authors = ["scottmotte"]
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
+    
+    gem.add_dependency('right_aws')
+    gem.add_dependency('mini_magick')
   end
 
 rescue LoadError

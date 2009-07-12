@@ -1,6 +1,4 @@
 require 'rubygems'
-gem 'right_aws'
-gem 'mini_magick'
 require 'right_aws'
 require 'mini_magick'
 
