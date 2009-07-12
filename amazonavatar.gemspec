@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
      "README.rdoc",
      "Rakefile",
      "VERSION",
+     "amazonavatar.gemspec",
      "lib/amazonavatar.rb",
      "lib/amazonavatar/default.png",
      "spec/amazonavatar_spec.rb",
