@@ -1,7 +1,117 @@
-= amazonavatar
+= AmazonAvatar
 
-Description goes here.
+Upload avatars to amazonS3 on a User (or other) model. Simple and opinionated. 
 
-== Copyright
+== Notes
 
-Copyright (c) 2009 scottmotte. See LICENSE for details.
+* I'm using it with merb and mongomapper.
+* Does resizing using minimagick
+* Uploads the images to your s3 account at /avatars/user_id/[original.png,thumb.png,mini.png]
+* Resizes a thumb to 48x48, and mini to 24x24. I told you it was opinionated.
+
+== Dependencies
+
+* right_aws
+* mini_magick
+
+== Requirements
+
+You must have ImageMagick installed. 
+
+On leopard
+
+  sudo port install tiff -macosx  #disables the linkage with Apple's open gl
+  sudo port install ImageMagick
+
+On ubuntu
+
+  sudo apt-get install build-essential libmagickcore-dev imagemagick libpcre3 libfcgi-dev libfcgi0ldbl libxml2-dev libxslt1-dev -y
+
+== Installation
+
+On your computer
+
+  gem sources -a http://gems.github.com
+  sudo gem install scottmotte-amazonavatar
+  
+Or for bundling
+
+  dependency 'scottmotte-amazonavatar'
+
+== Configuration
+
+Tell AmazonAvatar your S3 information.
+
+  AmazonAvatar.access_key_id = "your_access_key_id"
+  AmazonAvatar.secret_access_key = "your_secret_access_key"
+  AmazonAvatar.bucket_name = "yourdatabase_development"
+  # I put these in init.rb in the after_app_loads block for Merb. Probably put them in your environment.rb file for Rails.
+
+In user.rb model
+
+  class User
+    include AmazonAvatar::Uploader
+    ...
+  end  
+  
+In your users.rb controller put use the put_avatar instance method. @user.put_avatar.
+
+  def update_avatar(avatar)
+    @user = @current_user
+    raise NotFound unless @user
+    if @user.put_avatar(avatar)
+      redirect resource(@user, :edit),  :message => {:notice => "Avatar was updated"}
+    else
+      redirect resource(@user, :edit),  :message => {:error => "Avatar failed to be uploaded"}
+    end
+  end
+
+In global_helpers.rb
+
+  module Merb
+    module GlobalHelpers
+      include AmazonAvatar::Helpers
+      ...
+    end
+  end
+  
+This will give you the avatar_path helper which you can use with rails', sinatra's, merb's, etc's image_tag helper. Just pass in the id of the user to render his avatar.
+
+Also, you should add a default avatar to each user when they signup. The Paperclip gem does this by pointing to the missing.png avatar by storing the path to the avatar in the user table. This simple gem does not store the path in the database. What's the point. Instead you have to generate the default thumb for each user. There's an instance method for this.
+
+  @user.generate_default_avatar
+
+You can use it like so:
+
+  def create(user)
+    # session.abandon!
+    @user = User.new(user)
+    if @user.save
+        @user.generate_default_avatar
+        send_mail(UserMailer, :signup, { :from => AppConfig.site.email, :to => @user.email, :subject => "Twinstang welcome" }, { :user => @user })
+      redirect '/login', :message => {:notice => "Signup successful. Log in."}
+    else
+      message[:error] = "Signup failed"
+      render :new
+    end
+  end
+  
+Better yet wrap it in a run_later method in merb or put it in a background job in rails.
+
+  ...
+  if @user.save
+    run_later do
+      @user.generate_default_avatar
+      send_mail(UserMailer, :signup, { :from => AppConfig.site.email, :to => @user.email, :subject => "Twinstang welcome" }, { :user => @user })
+    end
+  end
+  ...
+
+  
+== Usage
+
+AmazonAvatar.access_key_id = AppConfig.s3.access_key_id # set your key
+AmazonAvatar.secret_access_key = AppConfig.s3.secret_access_key # set your secret
+AmazonAvatar.bucket_name = AppConfig.s3.bucket # set the bucket
+@user.put_avatar(avatar) # where avatar is the file_field value
+@user.generate_default_avatar # for generating the default avatar from amazonavatar/default.png
