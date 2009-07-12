@@ -4,6 +4,7 @@ Upload avatars to amazonS3 on a User (or other) model. Simple and opinionated.
 
 == Notes
 
+* rdoc is at: <a href="http://rdoc.info/projects/scottmotte/amazonavatar">http://rdoc.info/projects/scottmotte/amazonavatar</a>
 * I'm using it with merb and mongomapper.
 * Does resizing using minimagick
 * Uploads the images to your s3 account at /avatars/user_id/[original.png,thumb.png,mini.png]
