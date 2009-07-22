@@ -31,7 +31,7 @@ module AmazonAvatar
   
   # Defin connection using RightAws
   def self.connection
-    @@connection ||= RightAws::S3.new(access_key_id, secret_access_key)
+    @@connection ||= RightAws::S3.new(access_key_id, secret_access_key, {:multi_thread => true})
   end
   
   # AmazonAvatar.bucket = "bucket_name"
@@ -75,34 +75,35 @@ module AmazonAvatar
       def put_avatar(avatar)        
         # Original
         key1 = bucket.key("avatars/#{id}/#{@@avatars[:original][:filename]}")
-        key1.put(avatar[:tempfile].read, 'public-read')
+        key1.put(avatar[:tempfile].read, 'public-read', {'Content-Type'=>'image/png','Cache-Control' => 'public,max-age=31536000'})
         
-        # data
-        data = MiniMagick::Image.from_file(avatar[:tempfile].path)
-        # thumb
-        key2 = bucket.key("avatars/#{id}/#{@@avatars[:thumb][:filename]}")
-        key2.put(resize_and_crop(data, @@avatars[:thumb][:dimensions]).to_blob, 'public-read')
-        # mini
-        key3 = bucket.key("avatars/#{id}/#{@@avatars[:mini][:filename]}")
-        key3.put(resize_and_crop(data, @@avatars[:mini][:dimensions]).to_blob, 'public-read')
+        # image
+        image = MiniMagick::Image.from_file(avatar[:tempfile].path)
+        # resized
+        put_resized(bucket,id,image)
       end
     
       # upload default start avatars. this needs to be replaced with a default image somehow
       def generate_default_avatar        
         # Original
         key1 = bucket.key("avatars/#{id}/#{@@avatars[:original][:filename]}")
-        key1.put(File.new("#{AmazonAvatar.dir}/default.png").read, 'public-read')
+        key1.put(File.new("#{AmazonAvatar.dir}/default.png").read, 'public-read', {'Content-Type'=>'image/png','Cache-Control' => 'public,max-age=31536000'})
         
         # image
         image = MiniMagick::Image.from_file("#{AmazonAvatar.dir}/default.png")
+        # resized
+        put_resized(bucket,id,image)
+      end
+      
+    private
+      def put_resized(bucket,id,image)
         # thumb
         key2 = bucket.key("avatars/#{id}/#{@@avatars[:thumb][:filename]}")
-        key2.put(resize_and_crop(image, @@avatars[:thumb][:dimensions]).to_blob, 'public-read')
+        key2.put(resize_and_crop(image, @@avatars[:thumb][:dimensions]).to_blob, 'public-read', {'Content-Type'=>'image/png','Cache-Control' => 'public,max-age=31536000'})
         # mini
         key3 = bucket.key("avatars/#{id}/#{@@avatars[:mini][:filename]}")
-        key3.put(resize_and_crop(image, @@avatars[:mini][:dimensions]).to_blob, 'public-read')
+        key3.put(resize_and_crop(image, @@avatars[:mini][:dimensions]).to_blob, 'public-read', {'Content-Type'=>'image/png','Cache-Control' => 'public,max-age=31536000'})
       end
-  
   
       def resize_and_crop(image, size)
         if image[:width] < image[:height]
